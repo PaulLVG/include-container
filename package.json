@@ -15,7 +15,7 @@
     "homepage": "https://paullvg.github.io/include-container/",
     "repository": {
         "type": "git",
-        "url": "https://github.com/PaulLVG/include-container.git"
+        "url": "git+https://github.com/PaulLVG/include-container.git"
     },
     "bugs": {
         "url": "https://github.com/PaulLVG/include-container/issues"
