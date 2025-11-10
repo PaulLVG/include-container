@@ -15,9 +15,7 @@ A tiny Sass helper that ports the beloved [`include-media`](https://eduardobouca
 
 ## Credits & Acknowledgements
 
-This project is a respectful fork and adaptation of the wonderful  
-[`include-media`](https://eduardoboucas.github.io/include-media/) library  
-originally created by:
+This project is a respectful fork and adaptation of the wonderful [`include-media`](https://eduardoboucas.github.io/include-media/) library originally created by:
 
 - **Eduardo Boucas** – [@eduardoboucas](https://github.com/eduardoboucas)  
 - **Kitty Giraudel** – [@KittyGiraudel](https://github.com/KittyGiraudel)
@@ -71,7 +69,7 @@ This library **does not** emit any media fallback by design. It optionally wraps
 @supports (container-type: inline-size) { ... }
 ```
 
-so unsupported browsers just **don’t apply** those rules (safer default).
+So unsupported browsers just **don’t apply** those rules (safer default).
 
 ---
 
