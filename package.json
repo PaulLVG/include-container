@@ -34,5 +34,9 @@
     "sideEffects": false,
     "engines": {
         "node": ">=14.0.0"
-    }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "style": "include-container.scss"
 }
