@@ -59,7 +59,7 @@ $ic-breakpoints: (
 $ic-guard-supports: true;
 
 // Now import the library
-@use "include-container/include-container";
+@use "include-container";
 ```
 
 > If you vend this file directly (not via npm), just `@use "include-container";` with the file in your load path.
