@@ -1,23 +1,3 @@
-//   _            _           _                        _        _                 
-//  (_)          | |         | |                      | |      (_)                
-//   _ _ __   ___| |_   _  __| | ___    ___ ___  _ __ | |_ __ _ _ _ __   ___ _ __ 
-//  | | '_ \ / __| | | | |/ _` |/ _ \  / __/ _ \| '_ \| __/ _` | | '_ \ / _ \ '__|
-//  | | | | | (__| | |_| | (_| |  __/ | (_| (_) | | | | || (_| | | | | |  __/ |   
-//  |_|_| |_|\___|_|\__,_|\__,_|\___|  \___\___/|_| |_|\__\__,_|_|_| |_|\___|_|   
-//
-//      Simple, elegant and maintainable container queries in Sass
-//                             v1.0.0
-//
-//           https://github.com/PaulLVG/include-container
-//           https://paullvg.github.io/include-container/
-//
-//      Respectful adaptation of `include-media` by Eduardo Boucas
-//      & Kitty Giraudel, adapted to support container queries.
-//      Original repo: https://eduardoboucas.github.io/include-media/
-//      Fork maintained by: PaulLVG (https://github.com/PaulLVG)
-//
-//      This project is licensed under the terms of the MIT license.
-
 # include-container
 
 A tiny Sass helper that ports the beloved [`include-media`](https://eduardoboucas.github.io/include-media/) API to **Container Queries**.
