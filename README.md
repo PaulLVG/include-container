@@ -36,9 +36,9 @@ Maintained by [@PaulLVG](https://github.com/PaulLVG)
 ## Installation
 
 ```bash
-npm i -D @paullvg/include-container
+npm i -D include-container
 # or
-pnpm add -D @paullvg/include-container
+pnpm add -D include-container
 ```
 
 Import it in your Sass folder:
@@ -59,7 +59,7 @@ $ic-breakpoints: (
 $ic-guard-supports: true;
 
 // Now import the library
-@use "@paullvg/include-container/include-container";
+@use "include-container/include-container";
 ```
 
 > If you vend this file directly (not via npm), just `@use "include-container";` with the file in your load path.
@@ -101,9 +101,31 @@ $ic-guard-supports: true;
 
 ### Backwards-compatible alias
 
+Just in case your project already includes a mixin called "container", this syntax also works:
+
 ```scss
 @include include-container('>sm') { /* ... */ }
 ```
+
+---
+
+## Browser support
+
+Relies on [CSS Container Queries](https://caniuse.com/css-container-queries), supported by all modern browsers:
+
+- Chrome ≥ 105  
+- Edge ≥ 105  
+- Firefox ≥ 109  
+- Safari ≥ 16.4  
+
+Use the `@supports (container-type: inline-size)` guard to prevent errors on older engines.
+
+---
+
+## Why another library?
+
+include-container brings the same developer experience as include-media — but for Container Queries.
+No reinvented syntax, no JavaScript runtime, just pure Sass sugar syntax for modern responsive components.
 
 ---
 
@@ -130,7 +152,7 @@ So unsupported browsers just **don’t apply** those rules (safer default).
 - **$name**: optional container name (must match `container-name` in your CSS)
 - **$type**: if set to `'size'`, the `@supports` guard uses `(container-type: size)`.
   - When omitted, **inline-size** is assumed.
-- **$supports**: override to `false` to skip the `@supports` guard. Defaults to `$ic-guard-supports` (true).
+- **$supports**: whether to wrap output in a `@supports` rule. Defaults to `$ic-guard-supports` (true).
 
 The mixin supports **multiple conditions** by **nesting** `@container` rules (equivalent to logical AND).
 
@@ -225,7 +247,7 @@ Remember: the parent must establish a container context, e.g.:
 - **Author:** [@PaulLVG](https://github.com/PaulLVG)
 - **Repo:** https://github.com/PaulLVG/include-container
 - **Docs (GitHub Pages):** https://paullvg.github.io/include-container/
-- **npm:** https://www.npmjs.com/package/@paullvg/include-container
+- **npm:** https://www.npmjs.com/package/include-container
 
 ---
 

@@ -20,17 +20,14 @@
     "bugs": {
         "url": "https://github.com/PaulLVG/include-container/issues"
     },
-    "author": "PaulLVG <https://github.com/PaulLVG>",
+    "author": "PaulLVG (https://github.com/PaulLVG)",
     "license": "MIT",
     "files": [
-        "include-container.scss",
+        "_index.scss",
         "README.md",
         "LICENSE"
     ],
-    "exports": {
-        ".": "./include-container.scss"
-    },
-    "sass": "./include-container.scss",
+    "sass": "./_index.scss",
     "sideEffects": false,
     "engines": {
         "node": ">=14.0.0"
@@ -38,5 +35,5 @@
     "publishConfig": {
         "access": "public"
     },
-    "style": "include-container.scss"
+    "style": "_index.scss"
 }
