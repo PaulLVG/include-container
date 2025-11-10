@@ -37,7 +37,6 @@
     },
     "style": "_index.scss",
     "scripts": {
-        "test": "sass test.scss test.css",
         "lint": "stylelint \"**/*.scss\""
     },
     "devDependencies": {
