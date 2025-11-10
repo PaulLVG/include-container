@@ -1,6 +1,6 @@
 {
     "name": "include-container",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Simple, elegant and maintainable container queries in Sass. A respectful adaptation of include-media by Eduardo Boucas and Kitty Giraudel.",
     "keywords": [
         "sass",
