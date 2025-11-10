@@ -1,7 +1,16 @@
 # Changelog
 
-All notable changes to **include-container** will be documented in this file.  
+All notable changes to **include-container** will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.2] - 2025-11-10
+### 🔧 Maintenance release
+
+- 📝 Fixed `@use` import path in documentation to match actual file structure (`_index.scss`)
+- 🏗️ Restructured main Sass file from `include-container.scss` to `_index.scss` for better npm compatibility
+- ✨ Enhanced dev tooling setup with stylelint configuration
 
 ---
 
