@@ -66,6 +66,47 @@ $ic-guard-supports: true;
 
 ---
 
+## Getting started
+
+### Examples
+
+```scss
+// Inline-size by default
+@include container('>=md') {
+  .card { display: grid; gap: 1rem; }
+}
+
+// Height-based container query
+@include container('height >= 40ch') {
+  .teaser { display: block; }
+}
+
+// Named container
+@include container('>=lg', $name: 'layout') {
+  .sidebar { position: sticky; top: 1rem; }
+}
+
+// Combine conditions (min AND max)
+@include container('>=sm', '<=lg') {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+// Custom tweakpoint in scope:
+@include container-context(($tall: 70ch)) {
+  @include container('height>=tall') {
+    .hero { align-items: center; }
+  }
+}
+```
+
+### Backwards-compatible alias
+
+```scss
+@include include-container('>sm') { /* ... */ }
+```
+
+---
+
 ## Why no media-query fallback?
 
 Container Queries are **contextual**. Falling back to viewport-based media queries can break layouts when a component is designed to react to its **container** (e.g., a small card in a wide desktop page).  
@@ -92,36 +133,6 @@ So unsupported browsers just **don’t apply** those rules (safer default).
 - **$supports**: override to `false` to skip the `@supports` guard. Defaults to `$ic-guard-supports` (true).
 
 The mixin supports **multiple conditions** by **nesting** `@container` rules (equivalent to logical AND).
-
-#### Examples
-
-```scss
-// Inline-size by default
-@include container('>=md') {
-  .card { display: grid; gap: 1rem; }
-}
-
-// Height-based container query
-@include container('height >= 40ch') {
-  .teaser { display: block; }
-}
-
-// Named container
-@include container('>=lg', $name: 'layout') {
-  .sidebar { position: sticky; top: 1rem; }
-}
-
-// Combine conditions (min AND max)
-@include container('>=sm', '<=lg') {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-}
-```
-
-### Backwards-compatible alias
-
-```scss
-@include include-container('>sm') { /* ... */ }
-```
 
 ---
 
