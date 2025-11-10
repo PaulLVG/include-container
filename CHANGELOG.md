@@ -5,7 +5,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [1.0.2] - 2025-11-10
+## [1.0.3] - 2025-11-10
 ### 🔧 Maintenance release
 
 - 📝 Fixed `@use` import path in documentation to match actual file structure (`_index.scss`)
