@@ -1,0 +1,38 @@
+{
+    "name": "include-container",
+    "version": "1.0.0",
+    "description": "Simple, elegant and maintainable container queries in Sass. A respectful adaptation of include-media by Eduardo Boucas and Kitty Giraudel.",
+    "keywords": [
+        "sass",
+        "scss",
+        "mixin",
+        "container-queries",
+        "include-media",
+        "responsive",
+        "css",
+        "include-container"
+    ],
+    "homepage": "https://paullvg.github.io/include-container/",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/PaulLVG/include-container.git"
+    },
+    "bugs": {
+        "url": "https://github.com/PaulLVG/include-container/issues"
+    },
+    "author": "PaulLVG <https://github.com/PaulLVG>",
+    "license": "MIT",
+    "files": [
+        "include-container.scss",
+        "README.md",
+        "LICENSE"
+    ],
+    "exports": {
+        ".": "./include-container.scss"
+    },
+    "sass": "./include-container.scss",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=14.0.0"
+    }
+}

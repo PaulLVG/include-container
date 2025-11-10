@@ -1,5 +1,11 @@
 # include-container
 
+[![GitHub release](https://img.shields.io/github/v/release/PaulLVG/include-container?style=flat-square)](https://github.com/PaulLVG/include-container/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://github.com/PaulLVG/include-container/blob/main/LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/View%20Docs-GitHub%20Pages-green?style=flat-square)](https://paullvg.github.io/include-container/)
+[![npm version](https://img.shields.io/npm/v/include-container?style=flat-square)](https://www.npmjs.com/package/include-container)
+[![Sass](https://img.shields.io/badge/Sass-compatible-cc6699?style=flat-square&logo=sass)](https://sass-lang.com/)
+
 A tiny Sass helper that ports the beloved [`include-media`](https://eduardoboucas.github.io/include-media/) API to **Container Queries**.
 
 - Same shorthand syntax: `'>=md'`, `'<lg'`, `'height >= 40ch'`  
