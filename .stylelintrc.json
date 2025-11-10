@@ -1,0 +1,18 @@
+{
+  "extends": [
+    "stylelint-config-standard-scss"
+  ],
+  "rules": {
+    "scss/at-rule-conditional-no-parentheses": null,
+    "scss/operator-no-unspaced": null,
+    "at-rule-no-unknown": null,
+    "function-no-unknown": null,
+    "scss/at-function-pattern": null,
+    "annotation-no-unknown": [
+      true,
+      {
+        "ignoreAnnotations": ["container"]
+      }
+    ]
+  }
+}

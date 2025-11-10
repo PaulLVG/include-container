@@ -35,5 +35,14 @@
     "publishConfig": {
         "access": "public"
     },
-    "style": "_index.scss"
+    "style": "_index.scss",
+    "scripts": {
+        "test": "sass test.scss test.css",
+        "lint": "stylelint \"**/*.scss\""
+    },
+    "devDependencies": {
+        "sass": "^1.93.3",
+        "stylelint": "^16.0.0",
+        "stylelint-config-standard-scss": "^13.0.0"
+    }
 }

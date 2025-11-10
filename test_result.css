@@ -1,0 +1,21 @@
+/* Error: Undefined variable.
+ *    ,
+ * 98 |   $unit: math.unit($val);
+ *    |                    ^^^^
+ *    '
+ *   _index.scss 98:20   -ic-value()
+ *   _index.scss 137:9   -ic-parse()
+ *   _index.scss 198:10  -ic-clause()
+ *   _index.scss 268:12  container()
+ *   test.scss 53:1      root stylesheet */
+
+body::before {
+  font-family: "Source Code Pro", "SF Mono", Monaco, Inconsolata, "Fira Mono",
+      "Droid Sans Mono", monospace, monospace;
+  white-space: pre;
+  display: block;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-bottom: 2px solid black;
+  content: "Error: Undefined variable.\a    \2577 \a 98 \2502    $unit: math.unit($val);\a    \2502                     ^^^^\a    \2575 \a   _index.scss 98:20   -ic-value()\a   _index.scss 137:9   -ic-parse()\a   _index.scss 198:10  -ic-clause()\a   _index.scss 268:12  container()\a   test.scss 53:1      root stylesheet";
+}

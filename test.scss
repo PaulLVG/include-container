@@ -1,0 +1,213 @@
+// -----------------------------------------------------------------------------
+/*! include-container — integration tests (manual inspection)
+ *  Purpose: exercise most features & edge cases of the mixins/functions.
+ *  How to use: compile this file with Dart Sass and inspect the emitted CSS.
+ * -----------------------------------------------------------------------------
+ */
+
+// Use the published package name OR a relative path during local dev:
+@use "./index" as *;
+// @use "../path/to/_index.scss" as *;
+
+// Optional: override defaults BEFORE use (kept here commented for reference)
+// $ic-breakpoints: ( 'xxs': 320px, 'xs': 480px, 'sm': 640px, 'md': 768px, 'lg': 1024px, 'xl': 1280px, 'xxl': 1536px );
+// $ic-unit-intervals: ('px': 1, 'em': 0.01, 'rem': 0.1, 'ch': 0.1, '': 0);
+// $ic-guard-supports: true;
+
+/* -------------------------------------------------------------------------- */
+/* Establish container contexts for testing                                   */
+/* -------------------------------------------------------------------------- */
+
+.test-area {
+  /* default inline-size container */
+  container-type: inline-size;
+  container-name: default;
+}
+
+.layout {
+  container-type: inline-size;
+  container-name: layout;
+}
+
+.blockContext {
+  /* full size container (both inline + block axes) */
+  container-type: size;
+  container-name: blocky;
+}
+
+/* Helper target to visualize changes */
+.box,
+.card,
+.teaser,
+.sidebar,
+.grid,
+.hero,
+.panel,
+.badge,
+.tile { all: initial; display: block; }
+
+/* -------------------------------------------------------------------------- */
+/* 1) Single min-width (default inline-size)                                   */
+/* -------------------------------------------------------------------------- */
+
+@include container('>sm') {
+  .box { background: lightgreen; } // expect @container (min-width: 641px) …
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2) Range [>=md … <=lg] with exclusive upper bound handling                 */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=md', '<=lg') {
+  .card { border: 2px solid coral; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 3) Height-based query using ch (typographic unit)                           */
+/* -------------------------------------------------------------------------- */
+
+@include container('height >= 40ch') {
+  .teaser { color: rebeccapurple; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 4) Block-size upper bound using ≤                                          */
+/* -------------------------------------------------------------------------- */
+
+@include container('block-size ≤ 60ch') {
+  .panel { outline: 2px dashed orange; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 5) Named container (must match container-name)                              */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=lg', (name: 'layout')) {
+  .sidebar { position: sticky; top: 1rem; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 6) Multiple conditions (AND) — width & height together                      */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=sm', 'height >= 35ch') {
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 7) Contextual tweakpoints via container-context                             */
+/*    - Adds custom tokens for this scope only                                 */
+/* -------------------------------------------------------------------------- */
+
+@include container-context((
+  tall: 70ch,
+  "lg-plus": 1100px
+)) {
+  /* Use the tweakpoints */
+  @include container('height>=tall') {
+    .hero { align-items: center; }
+  }
+
+  @include container('>=lg-plus', '<=xxl') {
+    .tile { box-shadow: 0 0 0 3px rgba(0,0,0,.1); }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 8) Disable @supports guard explicitly & switch to `size` type               */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=md', (type: 'size', supports: false)) {
+  .badge { background: hotpink; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 9) Three-condition nesting (logical AND chaining)                           */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=xs', '<=xl', 'height >= 45ch') {
+  .box { background: lightblue; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 10) rem/em/px units: ensure unit-intervals apply (exclusive bounds)        */
+/* -------------------------------------------------------------------------- */
+
+@include container('> 48rem') {
+  .card { padding: 1rem; } // expect min-width: 48.1rem (given rem interval = 0.1)
+}
+
+@include container('< 60em') {
+  .card { margin: .5rem; } // expect max-width: 59.99em (given em interval = 0.01)
+}
+
+@include container('< 1024px') {
+  .card { border-radius: 8px; } // expect max-width: 1023px
+}
+
+/* -------------------------------------------------------------------------- */
+/* 11) Unicode operators mix (≥ and <=)                                        */
+/* -------------------------------------------------------------------------- */
+
+@include container('≥md', '<=xl') {
+  .teaser { font-weight: 600; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 12) Named + height in a size container                                      */
+/* -------------------------------------------------------------------------- */
+
+@include container('height >= 50ch', (name: 'blocky', type: 'size')) {
+  .panel { background: #f6f6f6; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 13) Spaceless tokens (robust parser)                                        */
+/* -------------------------------------------------------------------------- */
+
+@include container('height>=40ch', '>=sm','<=lg') {
+  .grid { gap: 2rem; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 14) Mixed axis conditions (width + block-size)                              */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=md', 'block-size < 80ch') {
+  .hero { max-inline-size: 70ch; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 15) Alias check: include-container                                           */
+/* -------------------------------------------------------------------------- */
+
+@include include-container('>xs') {
+  .badge { color: darkslategray; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 16) Named inline container without type override (defaults inline-size)     */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=sm', (name: 'default')) {
+  .box { border: 1px solid #ccc; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 17) Ensure nesting order preserves AND semantics                            */
+/*     (outer min, inner max)                                                  */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=md') {
+  @include container('<=lg') {
+    .tile { transform: translateY(0); }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* 18) Large range using top & bottom breakpoints                              */
+/* -------------------------------------------------------------------------- */
+
+@include container('>=xxs', '<=xxl') {
+  .teaser { letter-spacing: .01em; }
+}

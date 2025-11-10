@@ -1,9 +1,9 @@
-//   _            _           _                        _        _                 
-//  (_)          | |         | |                      | |      (_)                
-//   _ _ __   ___| |_   _  __| | ___    ___ ___  _ __ | |_ __ _ _ _ __   ___ _ __ 
+//   _            _           _                        _        _
+//  (_)          | |         | |                      | |      (_)
+//   _ _ __   ___| |_   _  __| | ___    ___ ___  _ __ | |_ __ _ _ _ __   ___ _ __
 //  | | '_ \ / __| | | | |/ _` |/ _ \  / __/ _ \| '_ \| __/ _` | | '_ \ / _ \ '__|
-//  | | | | | (__| | |_| | (_| |  __/ | (_| (_) | | | | || (_| | | | | |  __/ |   
-//  |_|_| |_|\___|_|\__,_|\__,_|\___|  \___\___/|_| |_|\__\__,_|_|_| |_|\___|_|   
+//  | | | | | (__| | |_| | (_| |  __/ | (_| (_) | | | | || (_| | | | | |  __/ |
+//  |_|_| |_|\___|_|\__,_|\__,_|\___|  \___\___/|_| |_|\__\__,_|_|_| |_|\___|_|
 //
 //      Simple, elegant and maintainable container queries in Sass
 //                             v1.0.0
@@ -13,10 +13,9 @@
 //
 //      Respectful adaptation of `include-media` by Eduardo Boucas
 //      & Kitty Giraudel, adapted to support container queries.
-//      Original repo: https://eduardoboucas.github.io/include-media/
-//      Fork maintained by: PaulLVG (https://github.com/PaulLVG)
+//      Original: https://eduardoboucas.github.io/include-media/
 //
-//      This project is licensed under the terms of the MIT license.
+//      MIT License — Maintained by @PaulLVG
 
 @use "sass:math";
 @use "sass:map";
@@ -25,11 +24,10 @@
 @use "sass:meta";
 
 // -----------------------------------------------------------------------------
-// Public configuration (override BEFORE @use when vendoring, or via Sass loader)
+// Public configuration (override before @use)
 // -----------------------------------------------------------------------------
 
-/// Named breakpoints for shorthand conditions like `'>=md'`.
-/// @type Map
+/// Named breakpoints used in shorthand conditions like '>=md'
 $ic-breakpoints: (
   "xxs": 320px,
   "xs":  480px,
@@ -40,234 +38,205 @@ $ic-breakpoints: (
   "xxl": 1536px
 ) !default;
 
-/// Unit intervals used to adjust exclusive bounds (`>` / `<`).
-/// Example: `> 40ch` → `min-width: 40.1ch` if `'ch': 0.1`.
-/// @type Map
+/// Unit deltas for exclusive ranges `>` and `<`
+/// e.g. '> 40ch' -> 40ch + 0.1ch, '< 60ch' -> 60ch - 0.1ch
 $ic-unit-intervals: (
   "px": 1,
   "em": 0.01,
-  "rem": 0.1, // common when :root font-size is 62.5%
-  "ch": 0.1,  // good for typographic widths
+  "rem": 0.1, // common with :root { font-size: 62.5% }
+  "ch": 0.1,
   "":  0
 ) !default;
 
-/// Wrap output with a @supports guard for container queries.
-/// If true, emits `@supports (container-type: inline-size|size) { ... }`.
-/// @type Bool
+/// Wraps output in @supports (container-type: inline-size|size)
 $ic-guard-supports: true !default;
 
 // -----------------------------------------------------------------------------
-// Internal helpers (string/number parsing, expression parsing)
+// Private helpers (parsing & utilities)
 // -----------------------------------------------------------------------------
 
-/// Trim leading/trailing spaces from a string.
-/// @access private
-/// @param {String} $value
-/// @return {String}
+/// Returns the operator found in the expression
+/// @return String: one of '>=', '>', '<=', '<', '≥', '≤'
+@function _ic-operator($expr) {
+  @each $op in (">=", ">", "<=", "<", "≥", "≤") {
+    @if string.index($expr, $op) {
+      @return $op;
+    }
+  }
+  @return null;
+}
 
-@function ic-str-trim($value) {
-  @if (string.slice($value, 1, 1) == " ") {
-    @return ic-str-trim(string.slice($value, 2));
-  } @else if (string.slice($value, string.length($value), -1) == " ") {
-    @return ic-str-trim(string.slice($value, 1, -2));
+/// Returns 'width' (inline-size) or provided dimension before the operator
+/// e.g. 'height >= 40ch' -> 'height', '>=md' -> 'width'
+@function _ic-dimension($expr, $op) {
+  $i: string.index($expr, $op);
+  @if $i == null { @return "width"; }
+  $raw: _ic-trim(string.slice($expr, 1, $i - 1));
+  @return if(string.length($raw) > 0, $raw, "width");
+}
+
+/// Returns 'min' for >=, > and 'max' for <=, <
+@function _ic-prefix($op) {
+  @return if(list.index(("<", "<=", "≤"), $op), "max", "min");
+}
+
+/// Converts a string like "768px" or "40ch" or a named breakpoint into a number with unit
+@function _ic-value($expr, $op) {
+  $i: string.index($expr, $op);
+  @if $i == null {
+    @error "No operator found in `#{$expr}`.";
+  }
+
+  $raw: _ic-trim(string.slice($expr, $i + string.length($op)));
+  // Named breakpoint?
+  $val: null;
+  @if map.has-key($ic-breakpoints, $raw) {
+    $val: map.get($ic-breakpoints, $raw);
   } @else {
-    @return $value;
+    $val: _ic-to-number($raw);
+  }
+
+  $unit: math.unit($val);
+  $delta: map.get($ic-unit-intervals, $unit);
+  @if $delta == null {
+    @error "Unknown unit `#{$unit}` in `#{$expr}`.";
+  }
+
+  @if $op == ">" {
+    @return $val + $delta;
+  } @else if $op == "<" {
+    @return $val - $delta;
+  } @else {
+    @return $val;
   }
 }
 
-/// Cast a string value to a Sass number with unit if present.
-/// @access private
-/// @param {String|Number} $value
-/// @return {Number}
+/// Parses a single condition into a parenthesized container condition string
+/// Accepts:
+///   - '>=md'            -> '(min-width: 768px)'
+///   - '<=lg'            -> '(max-width: 1024px)'
+///   - 'height >= 40ch'  -> '(min-height: 40.1ch)'
+///   - raw CSS in parens -> '(aspect-ratio > 1/1)' (returned as-is)
+@function _ic-parse($expr) {
+  // Already a parenthesized raw condition: return as-is
+  $trim: _ic-trim($expr);
+  @if string.slice($trim, 1, 1) == "(" {
+    @return $trim;
+  }
 
-@function ic-to-number($value) {
+  $op: _ic-operator($trim);
+  @if $op == null {
+    // No operator: assume >= named breakpoint, e.g. 'md' => '(min-width: <val>)'
+    @if map.has-key($ic-breakpoints, $trim) {
+      @return "(min-width: #{map.get($ic-breakpoints, $trim)})";
+    }
+    @error "No operator and not a known breakpoint in `#{$expr}`.";
+  }
+
+  $dim: _ic-dimension($trim, $op);
+  $pre: _ic-prefix($op);
+  $val: _ic-value($trim, $op);
+  @return "(#{$pre}-#{$dim}: #{$val})";
+}
+
+/// Trims leading/trailing spaces
+@function _ic-trim($s) {
+  @if string.slice($s, 1, 1) == " "  { @return _ic-trim(string.slice($s, 2)); }
+  @if string.slice($s, -1, -1) == " " { @return _ic-trim(string.slice($s, 1, -2)); }
+  @return $s;
+}
+
+/// Slices a list from start index to end (inclusive)
+@function _ic-slice($list, $start: 1, $end: list.length($list)) {
+  $result: ();
+  @if $start < 1 { $start: 1; }
+  @if $end > list.length($list) { $end: list.length($list); }
+  @if $start > $end { @return $result; }
+
+  @for $i from $start through $end {
+    $result: list.append($result, list.nth($list, $i), comma);
+  }
+  @return $result;
+}
+
+/// Casts a string like "40ch" or "768px" to a number with unit
+@function _ic-to-number($value) {
   @if meta.type-of($value) == "number" {
     @return $value;
   } @else if meta.type-of($value) != "string" {
-    @error "Value for `ic-to-number` should be a number or a string.";
+    @error "Value for `_ic-to-number` should be a number or a string.";
   }
 
   $first: string.slice($value, 1, 1);
   $minus: ($first == "-");
-  @if ($first == "+" or $first == "-") {
-    $work: string.slice($value, 2);
-  } @else {
-    $work: $value;
-  }
+  $work: if(($first == "+") or ($first == "-"), string.slice($value, 2), $value);
 
   $result: 0;
   $digits: 0;
-  $numbers: ("0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9);
+  $digits-map: ("0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9);
 
   @for $i from 1 through string.length($work) {
     $ch: string.slice($work, $i, $i);
-
-    @if not (list.index(map.keys($numbers), $ch) or $ch == ".") {
-      @return ic-to-length(if($minus, -$result, $result), string.slice($work, $i));
+    @if not(list.index(map.keys($digits-map), $ch) or $ch == ".") {
+      @return _ic-to-length(if($minus, -$result, $result), string.slice($work, $i));
     }
-
     @if $ch == "." {
       $digits: 1;
     } @else if $digits == 0 {
-      $result: $result * 10 + map.get($numbers, $ch);
+      $result: $result * 10 + map.get($digits-map, $ch);
     } @else {
       $digits: $digits * 10;
-      $result: $result + math.div(map.get($numbers, $ch), $digits);
+      $result: $result + math.div(map.get($digits-map, $ch), $digits);
     }
   }
 
   @return if($minus, -$result, $result);
 }
 
-/// Attach a CSS unit to a unitless number parsed from a string.
-/// @access private
-/// @param {Number} $value
-/// @param {String} $unit
-/// @return {Number}
-
-@function ic-to-length($value, $unit) {
+/// Adds a unit string to a unitless number
+@function _ic-to-length($val, $unit) {
   $units: (
-    "px": 1px, "cm": 1cm, "mm": 1mm, "%": 1%, "ch": 1ch, "pc": 1pc,
-    "in": 1in, "em": 1em, "rem": 1rem, "pt": 1pt, "ex": 1ex,
-    "vw": 1vw, "vh": 1vh, "vmin": 1vmin, "vmax": 1vmax
+    "px": 1px, "cm": 1cm, "mm": 1mm, "%": 1%, "ch": 1ch, "pc": 1pc, "in": 1in,
+    "em": 1em, "rem": 1rem, "pt": 1pt, "ex": 1ex, "vw": 1vw, "vh": 1vh,
+    "vmin": 1vmin, "vmax": 1vmax
   );
-
-  @if not list.index(map.keys($units), $unit) {
+  @if not map.has-key($units, $unit) {
     @error "Invalid unit `#{$unit}`.";
   }
-
-  @return $value * map.get($units, $unit);
+  @return $val * map.get($units, $unit);
 }
 
-/// Slice a Sass list between indexes (inclusive).
-/// @access private
-/// @param {List} $list
-/// @param {Number} $start [1]
-/// @param {Number} $end [length($list)]
-/// @return {List}
-
-@function ic-slice($list, $start: 1, $end: list.length($list)) {
-  @if list.length($list) < 1 or $start > $end {
-    @return ();
-  }
-  $out: ();
-  @for $i from $start through $end {
-    $out: list.append($out, list.nth($list, $i), comma);
-  }
-  @return $out;
+/// Internal: builds the full @container clause (with optional name)
+/// result example: "layout (min-width: 768px)"  OR  "(min-width: 768px)"
+@function _ic-clause($first-cond, $name) {
+  $cond: _ic-parse($first-cond);
+  @return if($name == null, $cond, "#{$name} #{$cond}");
 }
 
-/// Return the comparison operator found in a condition string.
-/// Supports: >=, >, <=, <, ≥, ≤
-/// @access private
-/// @param {String} $expr
-/// @return {String}
-
-@function ic-get-operator($expr) {
-  @each $op in (">=" , ">" , "<=" , "<" , "≥" , "≤") {
-    @if string.index($expr, $op) {
-      @return $op;
+/// Internal: extracts trailing options map if present
+/// Allowed keys: name, type, supports
+@function _ic-pop-options($conds) {
+  @if list.length($conds) == 0 { @return (options: (), rest: ()); }
+  $last: list.nth($conds, list.length($conds));
+  @if meta.type-of($last) == "map" {
+    $rest: ();
+    @for $i from 1 through list.length($conds) - 1 {
+      $rest: list.append($rest, list.nth($conds, $i), comma);
     }
+    @return (options: $last, rest: $rest);
   }
-  @error "No operator found in `#{$expr}`.";
-}
-
-/// Determine the dimension keyword (width, height, inline-size, block-size).
-/// Defaults to width if omitted.
-/// @access private
-/// @param {String} $expr
-/// @param {String} $operator
-/// @return {String}
-
-@function ic-get-dimension($expr, $operator) {
-  $op-index: string.index($expr, $operator);
-  $raw: ic-str-trim(string.slice($expr, 0, $op-index - 1));
-  @if string.length($raw) > 0 {
-    @return $raw;
-  }
-  @return "width";
-}
-
-/// Map a comparison operator to min/max prefix.
-/// @access private
-/// @param {String} $operator
-/// @return {String} "min" or "max"
-@function ic-get-prefix($operator) {
-  @return if(list.index(("<","<=","≤"), $operator), "max", "min");
-}
-
-/// Compute the numeric value from the right-hand side of an expression.
-/// Applies the unit-interval tweak for exclusive bounds.
-/// @access private
-/// @param {String} $expr
-/// @param {String} $operator
-/// @return {Number}
-
-@function ic-get-value($expr, $operator) {
-  $op-index: string.index($expr, $operator);
-  $raw: ic-str-trim(string.slice($expr, $op-index + string.length($operator)));
-  $value: null;
-
-  // Named breakpoint?
-  @if map.has-key($ic-breakpoints, $raw) {
-    $value: map.get($ic-breakpoints, $raw);
-  } @else {
-    $value: ic-to-number($raw);
-  }
-
-  $unit: math.unit($value);
-  $interval: map.get($ic-unit-intervals, $unit);
-
-  @if $interval == null {
-    @error "Unknown unit `#{$unit}` in `#{$expr}`.";
-  }
-
-  @if ($operator == ">") {
-    $value: $value + $interval;
-  } @else if ($operator == "<") {
-    $value: $value - $interval;
-  }
-
-  @return $value;
-}
-
-/// Parse a single condition into a valid container query clause (without parentheses).
-/// Examples:
-/// - ">=md"           → "min-width: 768px"
-/// - "<=lg"           → "max-width: 1024px"
-/// - "height >= 40ch" → "min-height: 40ch"
-/// - "block-size < 60ch" → "max-block-size: 60ch"
-/// @access private
-/// @param {String} $expr
-/// @return {String}
-
-@function ic-parse-expression($expr) {
-  // Shorthand dimension keywords supported: width (default), height, inline-size, block-size
-  @if map.has-key($ic-breakpoints, $expr) {
-    // If someone passes a bare key, treat as min-width
-    @return "min-width: #{map.get($ic-breakpoints, $expr)}";
-  }
-
-  // Static aliases? (not used by default, kept for symmetry)
-  // None by default.
-
-  $operator: ic-get-operator($expr);
-  $dimension: ic-get-dimension($expr, $operator); // width|height|inline-size|block-size (or custom)
-  $prefix: ic-get-prefix($operator);              // min|max
-  $value: ic-get-value($expr, $operator);         // Number
-
-  @return "#{$prefix}-#{$dimension}: #{$value}";
+  @return (options: (), rest: $conds);
 }
 
 // -----------------------------------------------------------------------------
-// Context mixin (tweakpoints)
+// Public: context mixin to temporarily extend breakpoints (tweakpoints)
 // -----------------------------------------------------------------------------
 
-/// Temporarily extend the breakpoints map within the block scope.
-/// @param {Map} $tweakpoints [()] e.g. ('tall': 70ch)
+/// Temporarily extends the global breakpoints within the block scope
+/// @param {Map} $tweakpoints - extra breakpoints to merge
 /// @example scss
-///   @include container-context(('tall': 70ch)) {
-///     @include container('height >= tall') { ... }
+///   @include container-context(("tall": 70ch)) {
+///     @include container("height >= tall") { /* ... */ }
 ///   }
 @mixin container-context($tweakpoints: ()) {
   $saved: $ic-breakpoints;
@@ -277,53 +246,54 @@ $ic-guard-supports: true !default;
 }
 
 // -----------------------------------------------------------------------------
-// Main API
+// Public: main mixin
 // -----------------------------------------------------------------------------
 
-/// Generate container queries from shorthand conditions.
-/// Multiple conditions are combined with logical AND by nesting @container rules.
-/// Optionally guard with @supports (container-type: inline-size|size).
+/// Generates @container rules from shorthand conditions.
+/// Usage:
+///   @include container('>=md') { .. }
+///   @include container('height >= 40ch') { .. }
+///   @include container('>=sm', '<=lg') { .. } // AND logic by nesting
+///   @include container('>=lg', $name: 'layout') { .. }
+///   @include container('>=lg', $name: 'layout', $type: 'size') { .. }
 ///
-/// @param {ArgList} $conditions  One or more strings like '>=md', '<lg', 'height >= 40ch'
-/// @param {String|null} $name    Optional container-name to target
-/// @param {String|null} $type    'inline-size' (default) or 'size' for the @supports guard
-/// @param {Bool|null} $supports  Override wrapper; defaults to `$ic-guard-supports`
+/// Options (via named parameters or trailing map):
+///   - $name: <string>    -> container-name to target
+///   - $type: 'inline-size'|'size' (default inline-size for @supports)
+///   - $supports: bool    -> wrap in @supports (defaults to $ic-guard-supports)
 ///
-/// @example scss - Basic
-///   @include container('>=md') { ... }
-///
-/// @example scss - Named container
-///   @include container('>=lg', $name: 'layout') { ... }
-///
-/// @example scss - Height condition
-///   @include container('height >= 50ch') { ... }
-///
-/// @example scss - Combined
-///   @include container('>=sm', '<=lg') { ... }
-@mixin container($conditions..., $name: null, $type: null, $supports: null) {
-  $supports: if($supports == null, $ic-guard-supports, $supports);
-  $type: if($type == null, inline-size, $type);
+/// Notes:
+/// - When multiple conditions are provided, the mixin nests @container blocks,
+///   which is equivalent to logical AND.
+@mixin container($conditions...) {
+  // Extract (optional) trailing options map
+  $parsed: _ic-pop-options($conditions);
+  $opts: map.get($parsed, options);
+  $rest: map.get($parsed, rest);
 
-  // No conditions -> nothing to emit
-  @if list.length($conditions) == 0 {
-    @content;
+  $final-name: map.get($opts, name);
+  $final-type: if(map.has-key($opts, type), map.get($opts, type), null);
+  $supports-flag: if(map.has-key($opts, supports), map.get($opts, supports), $ic-guard-supports);
+
+  @if list.length($rest) == 0 {
+    @error "include-container: at least one condition is required.";
   }
 
-  // Parse first condition to a clause WITHOUT parentheses
-  $first: list.nth($conditions, 1);
-  $clause: ic-parse-expression($first);
+  $first: list.nth($rest, 1);
+  $clause: _ic-clause($first, $final-name);
 
-  // Optional name prefix (e.g., "layout ")
-  $prefix: if($name != null and $name != "", $name + " ", "");
+  // Decide which container-type to guard for @supports
+  $guard-type: if($final-type == "size", "size", "inline-size");
 
-  // Build the @container rule body with required parentheses
-  @if $supports {
-    @supports (container-type: #{$type}) {
-      @container #{$prefix}(#{$clause}) {
-        $rest: ic-slice($conditions, 2);
-        @if list.length($rest) > 0 {
-          // Prevent nested @supports; pass supports=false for subsequent conditions
-          @include container($rest..., $name: $name, $type: $type, $supports: false) {
+  @if $supports-flag {
+    @supports (container-type: #{$guard-type}) {
+      // Note: VSCode CSS linter may show an error here, but this is valid Sass syntax
+      // The interpolation #{string.unquote($clause)} generates correct @container rules at compile time
+      @container #{string.unquote($clause)} {
+        @if list.length($rest) > 1 {
+          // Recursively handle remaining conditions with supports disabled
+          $tail-with-opts: list.append(_ic-slice($rest, 2), (name: $final-name, type: $final-type, supports: false), comma);
+          @include container($tail-with-opts...) {
             @content;
           }
         } @else {
@@ -332,10 +302,13 @@ $ic-guard-supports: true !default;
       }
     }
   } @else {
-    @container #{$prefix}(#{$clause}) {
-      $rest: ic-slice($conditions, 2);
-      @if list.length($rest) > 0 {
-        @include container($rest..., $name: $name, $type: $type, $supports: false) {
+    // Note: VSCode CSS linter may show an error here, but this is valid Sass syntax
+    // The interpolation #{string.unquote($clause)} generates correct @container rules at compile time
+    @container #{string.unquote($clause)} {
+      @if list.length($rest) > 1 {
+        // Recursively handle remaining conditions
+        $tail-with-opts: list.append(_ic-slice($rest, 2), (name: $final-name, type: $final-type, supports: false), comma);
+        @include container($tail-with-opts...) {
           @content;
         }
       } @else {
@@ -345,11 +318,10 @@ $ic-guard-supports: true !default;
   }
 }
 
-/// Backwards-compatible alias in case a project already uses a `container` mixin name.
-/// @example scss
-///   @include include-container('>sm') { ... }
-@mixin include-container($conditions..., $name: null, $type: null, $supports: null) {
-  @include container($conditions..., $name: $name, $type: $type, $supports: $supports) {
+// Backwards-compatible alias (if another mixin named `container` exists in a project)
+/// @alias include-container
+@mixin include-container($conditions...) {
+  @include container($conditions...) {
     @content;
   }
 }
